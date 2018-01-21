@@ -81,9 +81,14 @@
 #include "sys/alt_stdio.h"
 #include "sys/alt_irq.h"
 #include <stdint.h>
+#include <stdio.h>
+
+#include "system.h"
+#include "altera_avalon_pio_regs.h"
 
 #include "../inc/pio_driver.h"
 #include "../inc/delay.h"
+#include "../inc/uart.h"
 
 //void handle_timer_interrupt(void* p, alt_u32 param)
 //{
@@ -97,6 +102,8 @@
 
 int main()
 { 
+	char buff[30];
+	alt_putstr("KCC Project!\n");
 	unsigned long long time;
 
 	//time - 36 bits result
@@ -115,8 +122,21 @@ int main()
 	  PIO_ClearBit(LED_PORT, LED_0);
 	  delayMs(400);
 
-	  sendStrig("SIEMANO\n\r");
-  }
+	sprintf(buff, "Measurement 1 ms impulse\n\r");
+	alt_putstr(buff);
 
-  return 0;
+	sprintf(buff, "Result = %d impulses of clock\n\r", resultOfConversion);
+	alt_putstr(buff);
+
+	while (1)
+	{
+		PIO_SetBit(LED_PORT, LED_0);
+		delayMs(400);
+		PIO_ClearBit(LED_PORT, LED_0);
+		delayMs(400);
+
+		sendStrig("SIEMANO\n\r");
+	}
+
+	return 0;
 }
