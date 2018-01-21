@@ -108,6 +108,8 @@ int main()
 
 	//time - 36 bits result
 
+	uint16_t receivedData;
+
   alt_putstr("KCC Project!\n");
 
   // register the timer irq to be serviced by handle_timer_interrupt() function
@@ -115,7 +117,10 @@ int main()
 
   while (1)
   {
-	  SendLong(time);
+	  receivedData=ReceiveData();
+	  if(receivedData==66){
+		  SendLong(time);
+	  }
 
 	  PIO_SetBit(LED_PORT, LED_0);
 	  delayMs(400);
