@@ -15,6 +15,11 @@ static void sendByte(char byte)
 	IOWR_ALT_UP_RS232_DATA(UART_0_BASE, byte);
 }
 
+uint16_t ReceiveData(void){
+
+	return IORD_ALT_UP_RS232_DATA(UART_0_BASE);
+}
+
 void sendStrig(char* s)
 {
 	while(*s)
@@ -32,4 +37,20 @@ void sendData(uint8_t* data, uint16_t size)
 	{
 		sendByte((char)*data++);
 	}
+}
+void sendOneByte(uint8_t data)
+{
+	sendByte((char) data);
+
+}
+void sendLong(unsigned long long time){
+	time=time|0x0000010000000000;
+
+	sendOneByte((uint8_t)((time >> 40)&0xFF));
+	sendOneByte((uint8_t)((time >> 32)&0xFF));
+	sendOneByte((uint8_t)((time >> 24)&0xFF));
+	sendOneByte((uint8_t)((time >> 16)&0xFF));
+	sendOneByte((uint8_t)((time >> 8)&0xFF));
+	sendOneByte((uint8_t)(time&0xFF));
+
 }

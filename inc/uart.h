@@ -12,6 +12,8 @@
 
 void sendStrig(char* s);
 void sendData(uint8_t* data, uint16_t size);
+void sendLong(unsigned long long time);
+uint16_t ReceiveData(void);
 
 
 #endif /* UART_H_ */

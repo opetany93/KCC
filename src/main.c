@@ -81,35 +81,98 @@
 #include "sys/alt_stdio.h"
 #include "sys/alt_irq.h"
 #include <stdint.h>
+#include <stdio.h>
+
+#include "system.h"
+#include "altera_avalon_pio_regs.h"
+#include "altera_up_avalon_rs232_regs.h"
+#include "altera_up_avalon_rs232.h"
 
 #include "../inc/pio_driver.h"
 #include "../inc/delay.h"
+#include "../inc/uart.h"
 
-//void handle_timer_interrupt(void* p, alt_u32 param)
-//{
-//   // clear irq status in order to prevent retriggering
-//	//IOWR_ALTERA_AVALON_TIMER_STATUS(SYS_TIMER_BASE, 0);
-//
-//   // your isr code here
-//   // ....
-//}
+// MACROS
+#define TRIGGER PIN_0
+#define RESET 	PIN_1
+#define CONV_END PIN_2
+
+// VARIABLES
+char buff[30];
+uint8_t receivedData;
+volatile uint8_t flag = 0;
+volatile uint32_t set;
+
+// UART VARIABLES
+volatile uint32_t uart_context;		/* Kontekst do przerwañ z uartu */
+void* uart_ptr = (void*) &uart_context;
+
+//UART INTERRUPT FUNCTION
+void handle_uart_interrupt(void* p, alt_u32 param)
+{
+	volatile uint32_t uart_ptr = (volatile uint32_t*) p;//pobierz kontekst
+
+	sendStrig("Przerwanie\r\n");
+
+	receivedData = ReceiveData();
+	flag = 0x01;
+}
 
 
 int main()
 { 
-  alt_putstr("KCC Project!\n");
+	unsigned long long time;
 
-  // register the timer irq to be serviced by handle_timer_interrupt() function
-//   alt_irq_register(SYS_TIMER_IRQ, 0, handle_timer_interrupt);
+	alt_putstr("KCC Project!\n");
+
+	//SET PIO
+	PIO_Direction(PIO_0_BASE , 0x0F);
+
+	alt_irq_register(UART_0_IRQ, uart_ptr, handle_uart_interrupt);
+
+   // SET IRQ ON
+   set = IORD_ALT_UP_RS232_CONTROL(UART_0_BASE);
+   set |= 0x01;
+   IOWR_ALT_UP_RS232_CONTROL(UART_0_BASE, set);
+
+
+   delayMs(10);
+
+   sendStrig("KCC PROJ\r\n");
 
   while (1)
   {
-	  PIO_SetBit(LED_PORT, LED_0);
-	  delayMs(400);
-	  PIO_ClearBit(LED_PORT, LED_0);
-	  delayMs(400);
 
-	  sendStrig("SIEMANO\n\r");
+	if(flag){
+		//CLEAR FLAG
+		flag = 0x0;
+
+		//RECEIVE DATA
+
+		sendStrig("Cos odebrano\r\n");
+
+		if(receivedData == 0x66){  //START CONDITION
+
+			sendStrig("Rozpoczynam Pomiar\r\n");
+
+			PIO_SetBit(PIO_0_BASE , RESET);			// RESET COUNTERS
+			delayMs(2);
+			PIO_ClearBit(PIO_0_BASE , RESET);
+			delayMs(2);
+
+			PIO_SetBit(PIO_0_BASE , TRIGGER);			// SET TRIGER
+			delayMs(55);
+			PIO_ClearBit(PIO_0_BASE , TRIGGER);
+
+			delayMs(55);
+			while(!PIO_ReadBit(PIO_0_BASE, CONV_END));		// WHAIT FOR END OF MEASURE
+
+			time =  (PIO_Read(CONV_MSB_BASE) << 4) | PIO_Read(CONV_LSB_BASE);
+
+			sendLong(time);							//SEND MEASURMENT
+		}
+	}
+
   }
 
   return 0;
