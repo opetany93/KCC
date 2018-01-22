@@ -85,6 +85,7 @@
 
 #include "system.h"
 #include "altera_avalon_pio_regs.h"
+
 #include "altera_up_avalon_rs232_regs.h"
 #include "altera_up_avalon_rs232.h"
 
@@ -104,7 +105,7 @@ volatile uint8_t flag = 0;
 volatile uint32_t set;
 
 // UART VARIABLES
-volatile uint32_t uart_context;		/* Kontekst do przerwañ z uartu */
+volatile uint32_t uart_context;		/* Kontekst do przerwaï¿½ z uartu */
 void* uart_ptr = (void*) &uart_context;
 
 //UART INTERRUPT FUNCTION
@@ -143,6 +144,7 @@ int main()
   while (1)
   {
 
+
 	if(flag){
 		//CLEAR FLAG
 		flag = 0x0;
@@ -175,5 +177,6 @@ int main()
 
   }
 
-  return 0;
+
+	return 0;
 }

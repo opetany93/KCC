@@ -18,6 +18,7 @@ static void sendByte(char byte)
 uint16_t ReceiveData(void){
 
 	return IORD_ALT_UP_RS232_DATA(UART_0_BASE);
+
 }
 
 void sendStrig(char* s)
